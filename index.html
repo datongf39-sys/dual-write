@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dual-Write 灵感工作台 Pro</title>
+    <style>
+        :root {
+            --bg: #f6f7f9; --card: #fff; --border: #e6e6e6; --text: #222;
+            --muted: #666; --red: #D83931; --blue: #3370ff; --accent: #5c6bc0; --green: #52c41a;
+        }
+
+        /* ══ 主题变量 ══ */
+        body.theme-default { --bg:#f6f7f9; --card:#fff; --border:#e6e6e6; --text:#222; --muted:#888; --accent:#5c6bc0; --red:#D83931; --nav-icon:#fff; --nav-btn-bg:rgba(255,255,255,0.12); --nav-btn-hover:rgba(255,255,255,0.25); }
+        body.theme-pink    { --bg:#fff0f4; --card:#fff; --border:#f8c8d4; --text:#3a1a22; --muted:#b07080; --accent:#e05a7a; --red:#c0392b; --nav-icon:#fff; --nav-btn-bg:rgba(255,255,255,0.15); --nav-btn-hover:rgba(255,255,255,0.28); }
+        body.theme-peach   { --bg:#fff8f0; --card:#fff; --border:#ffd6a5; --text:#3a2a10; --muted:#b08060; --accent:#f4845f; --red:#e05a3a; --nav-icon:#5a2a10; --nav-btn-bg:rgba(0,0,0,0.08); --nav-btn-hover:rgba(0,0,0,0.16); }
+        body.theme-mint    { --bg:#f0faf5; --card:#fff; --border:#b2e0c8; --text:#1a3a28; --muted:#5a9070; --accent:#2ecc8a; --red:#e05a7a; --nav-icon:#0a4a28; --nav-btn-bg:rgba(0,0,0,0.08); --nav-btn-hover:rgba(0,0,0,0.15); }
+        body.theme-sky     { --bg:#f0f6ff; --card:#fff; --border:#b8d4f8; --text:#1a2a3a; --muted:#6080a0; --accent:#3a8ef6; --red:#e05050; --nav-icon:#fff; --nav-btn-bg:rgba(255,255,255,0.15); --nav-btn-hover:rgba(255,255,255,0.28); }
+        body.theme-lavender{ --bg:#f5f0ff; --card:#fff; --border:#d0b8f8; --text:#2a1a3a; --muted:#8060a0; --accent:#8b5cf6; --red:#e05a7a; --nav-icon:#fff; --nav-btn-bg:rgba(255,255,255,0.15); --nav-btn-hover:rgba(255,255,255,0.28); }
+        body.theme-dark    { --bg:#1a1a2e; --card:#16213e; --border:#0f3460; --text:#e0e0e0; --muted:#8888aa; --accent:#7c83fd; --red:#ff6b6b; --nav-icon:#fff; --nav-btn-bg:rgba(255,255,255,0.12); --nav-btn-hover:rgba(255,255,255,0.22); }
+        body.theme-ink     { --bg:#f2ede6; --card:#faf7f2; --border:#d4c9b8; --text:#2c1e10; --muted:#8c7a68; --accent:#8b6914; --red:#c0392b; --nav-icon:#fff; --nav-btn-bg:rgba(255,255,255,0.15); --nav-btn-hover:rgba(255,255,255,0.28); }
+        body.theme-forest  { --bg:#1e2d1e; --card:#243324; --border:#2d4a2d; --text:#c8e0c8; --muted:#7a9a7a; --accent:#5dbb63; --red:#ff6b6b; --nav-icon:#0a2a0a; --nav-btn-bg:rgba(0,0,0,0.12); --nav-btn-hover:rgba(0,0,0,0.22); }
+        body.theme-rose    { --bg:#fdf0f0; --card:#fff; --border:#f5c0c0; --text:#3a1010; --muted:#a07070; --accent:#d45050; --red:#c0392b; --nav-icon:#fff; --nav-btn-bg:rgba(255,255,255,0.15); --nav-btn-hover:rgba(255,255,255,0.28); }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; height: 100vh; background: var(--bg); font-family: 'PingFang SC', sans-serif; color: var(--text); overflow: hidden; display: flex; transition: background 0.3s, color 0.3s; }
+
+        .sidebar-nav { width: 60px; background: var(--accent); display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 20px; z-index: 100; transition: background 0.3s; }
+        .nav-btn { width: 40px; height: 40px; border-radius: 8px; border: none; background: var(--nav-btn-bg); color: var(--nav-icon); cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .nav-btn:hover { background: var(--nav-btn-hover); transform: scale(1.1); }
+
+        .wrapper { flex: 1; display: flex; flex-direction: column; height: 100%; gap: 10px; padding: 15px; min-width: 0; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; }
+        .app-title { font-size: 18px; font-weight: 700; color: var(--accent); }
+        .keywords { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; max-height: 80px; overflow-y: auto; font-size: 13px; outline: none; line-height: 1.6; color: var(--text); }
+
+        .toolbar { display: flex; gap: 6px; background: var(--card); padding: 8px; border-radius: 10px; border: 1px solid var(--border); align-items: center; flex-wrap: wrap; }
+        .toolbar button { border: 1px solid var(--border); background: var(--card); border-radius: 8px; width: 36px; height: 36px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; color: var(--text); transition: 0.2s; }
+        .toolbar button:hover { background: var(--bg); }
+        .divider { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+
+        /* 主题选择器 */
+        .theme-picker { display: flex; gap: 5px; align-items: center; margin-left: 4px; }
+        .theme-dot { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; flex-shrink: 0; }
+        .theme-dot:hover, .theme-dot.active { border-color: var(--text); transform: scale(1.2); }
+
+        .main { display: flex; flex: 1; gap: 12px; min-height: 0; }
+        .box-wrapper { flex: 1; display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; position: relative; }
+        .label { position: absolute; top: 10px; right: 15px; font-size: 11px; font-weight: 700; color: var(--muted); z-index: 10; pointer-events: none; }
+        .editor { flex: 1; padding: 20px; overflow-y: auto; outline: none; line-height: 1.8; font-size: 16px; white-space: pre-wrap; word-break: break-all; color: var(--text); }
+        .editor * { line-height: 1.8 !important; font-size: 16px !important; }
+        .footer { padding: 4px 10px; font-size: 12px; color: var(--muted); background: var(--card); border-top: 1px solid var(--border); }
+
+        #guideModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 20000; }
+        .modal-box { background: var(--card); width: 750px; height: 520px; border-radius: 16px; display: flex; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+        .modal-sidebar { width: 180px; background: var(--bg); border-right: 1px solid var(--border); padding: 20px 10px; }
+        .modal-nav { display: flex; flex-direction: column; gap: 8px; }
+        .nav-item { padding: 12px; border-radius: 8px; cursor: pointer; font-size: 14px; color: var(--muted); }
+        .nav-item.active { background: var(--accent); color: white; }
+        .modal-body { flex: 1; padding: 30px; overflow-y: auto; position: relative; color: var(--text); }
+        .help-content { display: none; line-height: 1.8; font-size: 14px; }
+        .help-content.active { display: block; }
+
+        .emoji-draggable { position: fixed; width: 300px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 10005; display: none; flex-direction: column; top: 150px; left: 80px; }
+        .emoji-header { padding: 10px; background: var(--bg); border-bottom: 1px solid var(--border); cursor: move; display: flex; justify-content: space-between; align-items: center; border-radius: 12px 12px 0 0; font-size: 12px; font-weight: bold; color: var(--text); }
+        .emoji-body { padding: 12px; max-height: 350px; overflow-y: auto; }
+        .emoji-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 10px; }
+        .emoji-btn { cursor: pointer; font-size: 20px; text-align: center; padding: 4px; border-radius: 5px; }
+
+        #transformModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 10001; }
+        .transform-box { background: var(--card); width: 1000px; height: 90vh; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .transform-header { padding: 15px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg); color: var(--text); }
+        .transform-body { flex: 1; display: grid; grid-template-columns: 350px 1fr; gap: 20px; padding: 20px; overflow: hidden; }
+        .mini-editor { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 15px; overflow-y: auto; outline: none; white-space: pre-wrap; word-break: break-all; font-size: 16px; background: var(--card); color: var(--text); }
+        textarea#dictBox { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: monospace; font-size: 13px; resize: none; background: var(--bg); outline: none; color: var(--text); }
+        .btn-p { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
+        .theme-card { padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; transition: 0.2s; }
+        .theme-card:hover { border-color: var(--accent); }
+        .theme-card.active { border-color: var(--accent); background: var(--bg); }
+    </style>
+</head>
+<body class="theme-default">
+
+<nav class="sidebar-nav">
+    <button class="nav-btn" onclick="focusSection('right')" title="回到 DRAFT 编辑区">📝</button>
+    <button class="nav-btn" onclick="openTransformModal()" title="进入智能替换中心">🚀</button>
+    <div style="flex:1"></div>
+    <button class="nav-btn" onclick="openThemeModal()" title="主题设置">🎨</button>
+    <button class="nav-btn" onclick="openGuide()" title="查看使用教程">📖</button>
+    <button class="nav-btn" onclick="resetAll()" title="彻底清空全站内容" style="color:#ff4d4f">🧹</button>
+</nav>
+
+<div class="wrapper">
+    <div class="header-bar">
+        <div class="app-title">Dual-Write 灵感工作台 Pro</div>
+        <div id="sysTime" style="font-size: 11px; color: var(--muted); font-family: monospace;"></div>
+    </div>
+    <div id="kwZone" class="keywords" contenteditable="true" title="关键词参考区..."></div>
+    <div class="toolbar">
+        <button onclick="document.execCommand('undo')" title="撤销">↩️</button>
+        <button onclick="document.execCommand('bold')" title="加粗 (B)"><b>B</b></button>
+        <button onclick="applyFeishuRed()" title="标红加粗 (A)"><b style="color:var(--red)">A</b></button>
+        <button onclick="cancelRed()" title="取消标红" style="font-size:13px; font-weight:700; color:var(--muted);">A̶</button>
+        <button onclick="makeBatchTags()" title="一键转红色标签 (#)">🚩</button>
+        <button onclick="toggleEmoji()" title="表情包面板">😀</button>
+        <div class="divider"></div>
+        <button onclick="smartCopy()" title="复制到飞书（保留格式）" style="color:var(--blue)">📋</button>
+        <button onclick="plainCopy()" title="复制到零克查词（纯文本）" style="color:var(--green); font-size:13px;">📄</button>
+    </div>
+    <div class="main">
+        <div class="box-wrapper"><div class="label">ORIGINAL</div><div id="left" class="editor" contenteditable="true"></div><div class="footer"><span id="leftStat">字数: 0</span></div></div>
+        <div class="box-wrapper"><div class="label">DRAFT</div><div id="right" class="editor" contenteditable="true"></div><div class="footer"><span id="rightStat">字数: 0</span></div></div>
+    </div>
+</div>
+
+<div id="themeModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;z-index:20000;">
+    <div style="background:var(--card);border-radius:16px;padding:30px;width:360px;box-shadow:0 20px 50px rgba(0,0,0,0.2);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <div style="font-size:16px;font-weight:700;color:var(--text);">🎨 主题</div>
+            <button onclick="document.getElementById('themeModal').style.display='none'" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--muted);">×</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+            <div class="theme-card" data-theme="theme-default" onclick="setTheme(this)">
+                <div style="display:flex;gap:6px;margin-bottom:6px;"><div style="width:14px;height:14px;border-radius:50%;background:#5c6bc0"></div><div style="width:14px;height:14px;border-radius:50%;background:#f6f7f9;border:1px solid #ddd"></div><div style="width:14px;height:14px;border-radius:50%;background:#D83931"></div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);">默认蓝</div>
+            </div>
+            <div class="theme-card" data-theme="theme-pink" onclick="setTheme(this)">
+                <div style="display:flex;gap:6px;margin-bottom:6px;"><div style="width:14px;height:14px;border-radius:50%;background:#e05a7a"></div><div style="width:14px;height:14px;border-radius:50%;background:#fff0f4;border:1px solid #f8c8d4"></div><div style="width:14px;height:14px;border-radius:50%;background:#c0392b"></div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);">少女粉</div>
+            </div>
+            <div class="theme-card" data-theme="theme-peach" onclick="setTheme(this)">
+                <div style="display:flex;gap:6px;margin-bottom:6px;"><div style="width:14px;height:14px;border-radius:50%;background:#f4845f"></div><div style="width:14px;height:14px;border-radius:50%;background:#fff8f0;border:1px solid #ffd6a5"></div><div style="width:14px;height:14px;border-radius:50%;background:#e05a3a"></div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);">蜜桃橙</div>
+            </div>
+            <div class="theme-card" data-theme="theme-mint" onclick="setTheme(this)">
+                <div style="display:flex;gap:6px;margin-bottom:6px;"><div style="width:14px;height:14px;border-radius:50%;background:#2ecc8a"></div><div style="width:14px;height:14px;border-radius:50%;background:#f0faf5;border:1px solid #b2e0c8"></div><div style="width:14px;height:14px;border-radius:50%;background:#e05a7a"></div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);">薄荷绿</div>
+            </div>
+            <div class="theme-card" data-theme="theme-sky" onclick="setTheme(this)">
+                <div style="display:flex;gap:6px;margin-bottom:6px;"><div style="width:14px;height:14px;border-radius:50%;background:#3a8ef6"></div><div style="width:14px;height:14px;border-radius:50%;background:#f0f6ff;border:1px solid #b8d4f8"></div><div style="width:14px;height:14px;border-radius:50%;background:#e05050"></div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);">天空蓝</div>
+            </div>
+            <div class="theme-card" data-theme="theme-lavender" onclick="setTheme(this)">
+                <div style="display:flex;gap:6px;margin-bottom:6px;"><div style="width:14px;height:14px;border-radius:50%;background:#8b5cf6"></div><div style="width:14px;height:14px;border-radius:50%;background:#f5f0ff;border:1px solid #d0b8f8"></div><div style="width:14px;height:14px;border-radius:50%;background:#e05a7a"></div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);">薰衣草紫</div>
+            </div>
+            <div class="theme-card" data-theme="theme-dark" onclick="setTheme(this)">
+                <div style="display:flex;gap:6px;margin-bottom:6px;"><div style="width:14px;height:14px;border-radius:50%;background:#7c83fd"></div><div style="width:14px;height:14px;border-radius:50%;background:#1a1a2e;border:1px solid #0f3460"></div><div style="width:14px;height:14px;border-radius:50%;background:#ff6b6b"></div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);">深夜黑</div>
+            </div>
+            <div class="theme-card" data-theme="theme-ink" onclick="setTheme(this)">
+                <div style="display:flex;gap:6px;margin-bottom:6px;"><div style="width:14px;height:14px;border-radius:50%;background:#8b6914"></div><div style="width:14px;height:14px;border-radius:50%;background:#f2ede6;border:1px solid #d4c9b8"></div><div style="width:14px;height:14px;border-radius:50%;background:#c0392b"></div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);">墨水棕</div>
+            </div>
+            <div class="theme-card" data-theme="theme-forest" onclick="setTheme(this)">
+                <div style="display:flex;gap:6px;margin-bottom:6px;"><div style="width:14px;height:14px;border-radius:50%;background:#5dbb63"></div><div style="width:14px;height:14px;border-radius:50%;background:#1e2d1e;border:1px solid #2d4a2d"></div><div style="width:14px;height:14px;border-radius:50%;background:#ff6b6b"></div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);">森林深绿</div>
+            </div>
+            <div class="theme-card" data-theme="theme-rose" onclick="setTheme(this)">
+                <div style="display:flex;gap:6px;margin-bottom:6px;"><div style="width:14px;height:14px;border-radius:50%;background:#d45050"></div><div style="width:14px;height:14px;border-radius:50%;background:#fdf0f0;border:1px solid #f5c0c0"></div><div style="width:14px;height:14px;border-radius:50%;background:#c0392b"></div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);">玫瑰红</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="guideModal">
+    <div class="modal-box">
+        <div class="modal-sidebar">
+            <div class="modal-nav">
+                <div class="nav-item active" onclick="showHelp('intro')">📖 使用教程</div>
+                <div class="nav-item" onclick="showHelp('basic')">⚙️ 基础设置</div>
+                <div class="nav-item" onclick="showHelp('tools')">⚡ 快捷工具</div>
+                <div class="nav-item" onclick="showHelp('edit')">🎨 编辑增强</div>
+                <div class="nav-item" onclick="showHelp('trans')">🚀 替换中心</div>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div id="intro" class="help-content active"><h3>Dual-Write 灵感工作台</h3><p>这是一个专门为文案改写、内容对标设计的工具。</p></div>
+            <div id="basic" class="help-content"><h3>1. 基础对照模式</h3><p>左右同步滚动，精准定位。</p></div>
+            <div id="tools" class="help-content"><h3>2. 快捷工具</h3><p>支持一键粘贴、一键复制。</p></div>
+            <div id="edit" class="help-content"><h3>3. 文字加工</h3><p>支持飞书红标注，物理锁定重点词。</p></div>
+            <div id="trans" class="help-content"><h3>4. 智能替换中心</h3><p>锁定优先级：锁定 > 替换。高亮显示已替换词。红色区域永不被动。</p></div>
+            <button style="position:absolute; bottom:20px; right:20px;" onclick="closeGuide()">知道了</button>
+        </div>
+    </div>
+</div>
+
+<div id="transformModal">
+    <div class="transform-box">
+        <div class="transform-header">
+            <span style="font-weight:bold; font-size:18px;">🚀 智能替换中心 (物理锁定+高亮预览)</span>
+            <button onclick="closeTransformModal()" style="font-size:24px; cursor:pointer; background:none; border:none;">&times;</button>
+        </div>
+        <div class="transform-body">
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <label style="font-size:12px; font-weight:bold;">1. 词库配置</label>
+                <textarea id="dictBox" placeholder="敏感词 : 替换1,替换2"></textarea>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-p" style="flex:1; background:#eee" onclick="exportDict()">导出</button>
+                    <button class="btn-p" style="flex:1; background:#eee" onclick="document.getElementById('fileInput').click()">导入</button>
+                </div>
+                <input type="file" id="fileInput" style="display:none" onchange="importDict(this)">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px; overflow:hidden;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label style="font-size:12px; font-weight:bold;">2. 预览 (黄色背景为已替换词)</label>
+                    <button class="btn-p" style="padding:4px 10px; font-size:11px; background:#fffbe6" onclick="syncFromRight()">同步 DRAFT 内容</button>
+                </div>
+                <div id="tInput" class="mini-editor" contenteditable="true"></div>
+                <button class="btn-p" style="background:var(--accent); color:white" onclick="executeSafeTransform()">🚀 执行安全替换(含高亮)</button>
+                <div id="tOutput" class="mini-editor" contenteditable="true"></div>
+                <button class="btn-p" style="background:var(--green); color:white" onclick="applyBackToRight()">✅ 应用结果并返回</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="emojiBox" class="emoji-draggable">
+    <div class="emoji-header" id="emojiHeader"><span>😀 表情库</span><span onclick="toggleEmoji()" style="cursor:pointer">×</span></div>
+    <div class="emoji-body"><div id="cat_recent" class="emoji-grid"></div><div id="cat_ops" class="emoji-grid"></div><div id="cat_custom" class="emoji-grid"></div></div>
+</div>
+
+<script>
+// --- 原封不动：物理锁定算法核心 ---
+function isUnderRedProtection(node) {
+    let curr = node.nodeType === 3 ? node.parentElement : node;
+    while (curr && curr.id !== 'tInput') {
+        if (curr.style && curr.style.color) {
+            const inlineColor = curr.style.color.replace(/\s+/g, '');
+            if (inlineColor.includes('216,57,49')) return true;
+        }
+        const computed = window.getComputedStyle(curr);
+        if (computed.color) {
+            const computedColor = computed.color.replace(/\s+/g, '');
+            if (computedColor.includes('216,57,49')) return true;
+        }
+        curr = curr.parentElement;
+    }
+    return false;
+}
+
+// --- 增强：执行替换 + 高亮逻辑 ---
+function executeSafeTransform() {
+    const input = document.getElementById('tInput'), output = document.getElementById('tOutput'), dict = document.getElementById('dictBox').value.trim();
+    if (!input.innerHTML.trim() || !dict) return;
+    let rules = [];
+    dict.split('\n').forEach(line => {
+        let sep = line.search(/[:：]/); if (sep === -1) return;
+        let bads = line.substring(0, sep).split(/[,，]/).map(w => w.trim()).filter(w => w);
+        let goods = line.substring(sep + 1).split(/[,，]/).map(w => w.trim()).filter(w => w);
+        if (goods.length > 0) bads.forEach(b => rules.push({ b, goods }));
+    });
+    rules.sort((a, b) => b.b.length - a.b.length);
+
+    const temp = document.createElement('div'); temp.innerHTML = input.innerHTML;
+    
+    // 递归处理节点
+    const walk = (node) => {
+        if (isUnderRedProtection(node)) return;
+        if (node.nodeType === 3) {
+            let txt = node.nodeValue;
+            let hasChanged = false;
+            rules.forEach(r => {
+                const reg = new RegExp(r.b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+                if(reg.test(txt)) {
+                    txt = txt.replace(reg, (match) => {
+                        const picked = r.goods[Math.floor(Math.random() * r.goods.length)];
+                        // 在这里加上高亮样式
+                        return `<span style="background-color: #fff176; color: #000; border-radius: 2px; padding: 0 2px;">${picked}</span>`;
+                    });
+                    hasChanged = true;
+                }
+            });
+            if(hasChanged) {
+                const span = document.createElement('span');
+                span.innerHTML = txt;
+                node.parentNode.replaceChild(span, node);
+            }
+        } else {
+            Array.from(node.childNodes).forEach(child => walk(child));
+        }
+    };
+    walk(temp);
+    output.innerHTML = temp.innerHTML;
+}
+
+// --- 其余工作台基础逻辑 (全数保留) ---
+const left = document.getElementById('left'), right = document.getElementById('right'), kwZone = document.getElementById('kwZone');
+function applyFeishuRed() {
+    const sel = window.getSelection(); if (!sel.rangeCount || sel.isCollapsed) return;
+    const range = sel.getRangeAt(0); const span = document.createElement('span');
+    span.style.color = 'rgb(216, 57, 49)'; span.style.fontWeight = 'bold';
+    span.appendChild(range.extractContents()); range.insertNode(span);
+    autoSave();
+}
+function makeBatchTags() {
+    const sel = window.getSelection(); if (!sel.toString().trim()) return;
+    const html = sel.toString().split(/[,，、\s\n]+/).filter(t=>t.trim()).map(t=>`<span style="color:rgb(216, 57, 49); font-weight:bold;">#${t}</span>`).join("&nbsp;");
+    document.execCommand('insertHTML', false, html + "&nbsp;");
+    autoSave();
+}
+function openTransformModal() { document.getElementById('transformModal').style.display = 'flex'; syncFromRight(); }
+function closeTransformModal() { document.getElementById('transformModal').style.display = 'none'; }
+function syncFromRight() { document.getElementById('tInput').innerHTML = right.innerHTML; }
+function applyBackToRight() { right.innerHTML = document.getElementById('tOutput').innerHTML; updateStats(); autoSave(); closeTransformModal(); }
+function openGuide() { document.getElementById('guideModal').style.display = 'flex'; }
+function closeGuide() { document.getElementById('guideModal').style.display = 'none'; }
+function showHelp(id) {
+    document.querySelectorAll('.help-content, .nav-item').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+function updateStats() {
+    const lCount = left.innerText.replace(/\n{2,}/g, '\n').length;
+    const rCount = right.innerText.replace(/\n{2,}/g, '\n').length;
+    document.getElementById('leftStat').innerText = `字数: ${lCount}`;
+    document.getElementById('rightStat').innerText = `字数: ${rCount}`;
+}
+function autoSave() { localStorage.setItem('dw_pro_final_v2', JSON.stringify({l: left.innerHTML, r: right.innerHTML, k: kwZone.innerHTML, d: document.getElementById('dictBox').value})); }
+async function pasteTo(id) { document.getElementById(id).innerText = await navigator.clipboard.readText(); updateStats(); autoSave(); }
+function cancelRed() {
+    const sel = window.getSelection();
+    if (!sel.rangeCount || sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    // 把选中范围内所有红色span拆开还原成普通文本
+    const fragment = range.extractContents();
+    const walker = document.createTreeWalker(fragment, NodeFilter.SHOW_ELEMENT);
+    const toUnwrap = [];
+    let node = walker.nextNode();
+    while (node) {
+        if (node.style && (node.style.color === 'rgb(216, 57, 49)' || node.style.color === 'rgb(192, 57, 43)')) {
+            toUnwrap.push(node);
+        }
+        node = walker.nextNode();
+    }
+    toUnwrap.forEach(el => {
+        el.style.color = '';
+        el.style.fontWeight = '';
+        if (!el.getAttribute('style')) el.removeAttribute('style');
+    });
+    range.insertNode(fragment);
+    autoSave();
+}
+
+function openThemeModal() {
+    document.getElementById('themeModal').style.display = 'flex';
+}
+
+function setTheme(el) {
+    const theme = el.dataset.theme;
+    document.body.className = theme;
+    document.querySelectorAll('.theme-card').forEach(d => d.classList.toggle('active', d.dataset.theme === theme));
+    localStorage.setItem('dw_theme', theme);
+}
+
+function smartCopy() {
+    const range = document.createRange();
+    range.selectNodeContents(right);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+    alert("已复制（飞书/富文本）！");
+}
+
+function plainCopy() {
+    const text = right.innerText.replace(/\n{2,}/g, '\n');
+    navigator.clipboard.writeText(text).then(() => alert("已复制（纯文本）！"));
+}
+
+function resetAll() { if(confirm("确定清空全站内容？")) { left.innerHTML=''; right.innerHTML=''; kwZone.innerHTML=''; updateStats(); autoSave(); } }
+
+// Emoji 逻辑
+let emojiConfig = { ops: ["👉","✅","❗","⚠️","💡","✨","🔥","🌟","💯","🚀","📍","🚩","👍","🙌","🙏","✍️","📖","🎨","🌈","0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"], custom: [], stats: {} };
+function renderEmoji() {
+    const recent = Object.entries(emojiConfig.stats).sort((a,b)=>b[1]-a[1]).slice(0, 7).map(i=>i[0]);
+    fillGrid('cat_recent', recent); fillGrid('cat_ops', emojiConfig.ops); fillGrid('cat_custom', emojiConfig.custom);
+}
+function fillGrid(id, list) {
+    const el = document.getElementById(id); el.innerHTML = '';
+    list.forEach(e => {
+        const btn = document.createElement('span'); btn.className = 'emoji-btn'; btn.innerText = e;
+        btn.onmousedown = (ev) => {
+            ev.preventDefault(); document.execCommand('insertText', false, e);
+            emojiConfig.stats[e] = (emojiConfig.stats[e] || 0) + 1;
+            localStorage.setItem('dw_emoji_v5', JSON.stringify(emojiConfig));
+            renderEmoji(); autoSave();
+        };
+        el.appendChild(btn);
+    });
+}
+function toggleEmoji() { const b = document.getElementById('emojiBox'); b.style.display = (b.style.display === 'flex') ? 'none' : 'flex'; }
+function addCustomEmoji() { const e = prompt("输入Emoji："); if(e) { emojiConfig.custom.push(e); localStorage.setItem('dw_emoji_v5', JSON.stringify(emojiConfig)); renderEmoji(); } }
+
+window.onload = () => {
+    const saved = JSON.parse(localStorage.getItem('dw_pro_final_v2') || '{}');
+    if(saved.l) left.innerHTML=saved.l; if(saved.r) right.innerHTML=saved.r; if(saved.k) kwZone.innerHTML=saved.k;
+    if(saved.d) document.getElementById('dictBox').value = saved.d;
+    const emj = localStorage.getItem('dw_emoji_v5'); if(emj) emojiConfig = JSON.parse(emj);
+    // 恢复主题
+    const savedTheme = localStorage.getItem('dw_theme') || 'theme-default';
+    document.body.className = savedTheme;
+    document.querySelectorAll('.theme-card').forEach(d => d.classList.toggle('active', d.dataset.theme === savedTheme));
+    renderEmoji(); updateStats();
+    setInterval(() => { document.getElementById('sysTime').innerText = new Date().toLocaleString(); }, 1000);
+};
+
+// 拖拽
+let isDrg = false, off = [0,0];
+const eb = document.getElementById('emojiBox');
+document.getElementById('emojiHeader').onmousedown = (e) => { isDrg = true; off = [eb.offsetLeft - e.clientX, eb.offsetTop - e.clientY]; };
+document.onmousemove = (e) => { if (isDrg) { eb.style.left = (e.clientX + off[0]) + 'px'; eb.style.top = (e.clientY + off[1]) + 'px'; } };
+document.onmouseup = () => isDrg = false;
+
+// 导入导出
+function exportDict() { 
+    const b = new Blob([document.getElementById('dictBox').value], {type:'text/plain'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = '词库.txt'; a.click();
+}
+function importDict(input) {
+    const r = new FileReader(); r.onload = e => { document.getElementById('dictBox').value = e.target.result; autoSave(); }; r.readAsText(input.files[0], 'UTF-8');
+}
+
+left.addEventListener('input', () => { updateStats(); autoSave(); });
+right.addEventListener('input', () => { updateStats(); autoSave(); });
+kwZone.addEventListener('input', autoSave);
+</script>
+</body>
+</html>
