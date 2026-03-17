@@ -77,6 +77,14 @@
         .theme-card { padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; transition: 0.2s; }
         .theme-card:hover { border-color: var(--accent); }
         .theme-card.active { border-color: var(--accent); background: var(--bg); }
+
+        /* ══ 自定义滚动条 ══ */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; transition: background 0.2s; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+        ::-webkit-scrollbar-corner { background: transparent; }
+        * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
     </style>
 </head>
 <body class="theme-default">
