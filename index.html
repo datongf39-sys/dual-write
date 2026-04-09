@@ -131,35 +131,40 @@
 
         /* ══ 通用指令库 ══ */
         #promptLibModal { position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:15000; }
-        .plib-box { background:var(--card);width:720px;max-height:86vh;border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.25); }
-        .plib-header { padding:15px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--bg);flex-shrink:0; }
+        .plib-box { background:var(--card);width:820px;height:80vh;border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.25); }
+        .plib-header { padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--bg);flex-shrink:0; }
         .plib-title { font-size:15px;font-weight:700;color:var(--text); }
-        .plib-close { font-size:22px;cursor:pointer;background:none;border:none;color:var(--muted);line-height:1;padding:2px 6px;border-radius:6px; }
-        .plib-close:hover { background:var(--border); }
-        .plib-list { flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px; }
-        .plib-empty { color:var(--muted);font-size:13px;text-align:center;padding:40px 0; }
-        .plib-card { background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:box-shadow 0.15s; }
-        .plib-card:hover { box-shadow:0 2px 12px rgba(0,0,0,0.08); }
-        .plib-card-top { display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border); }
+        .plib-close { font-size:20px;cursor:pointer;background:none;border:none;color:var(--muted);line-height:1;padding:4px 8px;border-radius:6px;transition:0.15s; }
+        .plib-close:hover { background:var(--border);color:var(--text); }
+        .plib-body { flex:1;display:flex;overflow:hidden; }
+
+        /* 左侧新建区 */
+        .plib-new { width:280px;flex-shrink:0;border-right:1px solid var(--border);background:var(--bg);display:flex;flex-direction:column;padding:16px;gap:10px; }
+        .plib-new-label { font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;margin-bottom:2px; }
+        .plib-input { padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--card);color:var(--text);outline:none;width:100%;box-sizing:border-box;font-family:inherit;transition:border-color 0.15s; }
+        .plib-input:focus { border-color:var(--accent); }
+        .plib-textarea { padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--card);color:var(--text);outline:none;resize:none;width:100%;box-sizing:border-box;font-family:inherit;line-height:1.65;flex:1;transition:border-color 0.15s; }
+        .plib-textarea:focus { border-color:var(--accent); }
+        .plib-save-btn { padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:0.15s;flex-shrink:0; }
+        .plib-save-btn:hover { filter:brightness(0.9); }
+
+        /* 右侧列表区 */
+        .plib-list { flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px; }
+        .plib-empty { color:var(--muted);font-size:13px;text-align:center;padding:60px 0;line-height:2; }
+        .plib-card { background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:box-shadow 0.15s,border-color 0.15s; }
+        .plib-card:hover { box-shadow:0 3px 14px rgba(0,0,0,0.08);border-color:var(--accent); }
+        .plib-card-top { display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border); }
         .plib-card-title { font-size:13px;font-weight:700;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-        .plib-card-actions { display:flex;gap:5px;flex-shrink:0; }
+        .plib-card-actions { display:flex;gap:4px;flex-shrink:0; }
         .plib-btn-copy { padding:4px 12px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:0.15s; }
         .plib-btn-copy:hover { filter:brightness(0.9); }
         .plib-btn-copy.copied { background:var(--green); }
         .plib-btn-edit { padding:4px 10px;background:var(--card);color:var(--muted);border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;transition:0.15s; }
-        .plib-btn-edit:hover { color:var(--text);border-color:var(--text); }
-        .plib-btn-del { padding:4px 8px;background:none;color:var(--muted);border:none;border-radius:6px;font-size:16px;cursor:pointer;line-height:1;transition:0.15s; }
-        .plib-btn-del:hover { color:var(--red); }
-        .plib-card-preview { padding:10px 14px;font-size:12px;color:var(--muted);line-height:1.7;white-space:pre-wrap;max-height:72px;overflow:hidden;position:relative; }
-        .plib-card-preview::after { content:'';position:absolute;bottom:0;left:0;right:0;height:24px;background:linear-gradient(transparent,var(--bg)); }
-        .plib-new { padding:14px;border-top:1px solid var(--border);background:var(--bg);flex-shrink:0;display:flex;gap:10px; }
-        .plib-new-fields { flex:1;display:flex;flex-direction:column;gap:8px;min-width:0; }
-        .plib-input { padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--card);color:var(--text);outline:none;width:100%;box-sizing:border-box;font-family:inherit;transition:border-color 0.15s; }
-        .plib-input:focus { border-color:var(--accent); }
-        .plib-textarea { padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--card);color:var(--text);outline:none;resize:vertical;width:100%;box-sizing:border-box;font-family:inherit;line-height:1.6;min-height:80px;transition:border-color 0.15s; }
-        .plib-textarea:focus { border-color:var(--accent); }
-        .plib-save-btn { padding:0 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;align-self:flex-end;height:36px;transition:0.15s; }
-        .plib-save-btn:hover { filter:brightness(0.9); }
+        .plib-btn-edit:hover { color:var(--text);border-color:var(--muted); }
+        .plib-btn-del { padding:4px 7px;background:none;color:var(--muted);border:none;border-radius:6px;font-size:15px;cursor:pointer;transition:0.15s;line-height:1; }
+        .plib-btn-del:hover { color:var(--red);background:rgba(216,57,49,0.08); }
+        .plib-card-preview { padding:9px 12px;font-size:12px;color:var(--muted);line-height:1.7;white-space:pre-wrap;max-height:64px;overflow:hidden;position:relative; }
+        .plib-card-preview::after { content:'';position:absolute;bottom:0;left:0;right:0;height:22px;background:linear-gradient(transparent,var(--bg)); }
 
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -351,13 +356,16 @@
             <span class="plib-title">💬 通用指令库</span>
             <button class="plib-close" onclick="closePromptLib()">&times;</button>
         </div>
-        <div class="plib-list" id="promptList"></div>
-        <div class="plib-new">
-            <div class="plib-new-fields">
-                <input class="plib-input" id="promptTitleInput" placeholder="指令名称（如：卡关键词、改标题…）" onkeydown="if(event.key==='Enter')document.getElementById('promptContentInput').focus()">
-                <textarea class="plib-textarea" id="promptContentInput" rows="4" placeholder="在这里粘贴你的 prompt 内容…"></textarea>
+        <div class="plib-body">
+            <!-- 左侧：新建 -->
+            <div class="plib-new">
+                <div class="plib-new-label">新建指令</div>
+                <input class="plib-input" id="promptTitleInput" placeholder="指令名称，如：卡关键词" onkeydown="if(event.key==='Enter')document.getElementById('promptContentInput').focus()">
+                <textarea class="plib-textarea" id="promptContentInput" placeholder="粘贴 prompt 内容…"></textarea>
+                <button class="plib-save-btn" onclick="savePrompt()">＋ 保存指令</button>
             </div>
-            <button class="plib-save-btn" onclick="savePrompt()">＋ 保存</button>
+            <!-- 右侧：列表 -->
+            <div class="plib-list" id="promptList"></div>
         </div>
     </div>
 </div>
