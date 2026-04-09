@@ -797,26 +797,72 @@ function closePromptLib() {
 function renderPrompts() {
     const list = document.getElementById('promptList');
     if (promptLibData.length === 0) {
-        list.innerHTML = '<div class="plib-empty">还没有指令，在下方新建一个吧</div>';
+        list.innerHTML = '<div class="plib-empty">还没有指令<br>在左侧新建一个吧</div>';
         return;
     }
     list.innerHTML = '';
     promptLibData.forEach((p, i) => {
         const card = document.createElement('div');
         card.className = 'plib-card';
+        card.id = `pcard-${p.id}`;
+        const safeTitle = p.title.replace(/"/g,'&quot;').replace(/</g,'&lt;');
+        const safeContent = p.content.replace(/</g,'&lt;');
         card.innerHTML = `
             <div class="plib-card-top">
-                <span class="plib-card-title" title="${p.title}">${p.title}</span>
+                <span class="plib-card-title" title="${safeTitle}">${safeTitle}</span>
                 <div class="plib-card-actions">
                     <button class="plib-btn-copy" id="pbtn-${p.id}" onclick="copyPrompt(${i},${p.id})">复制</button>
-                    <button class="plib-btn-edit" onclick="editPrompt(${i})">编辑</button>
+                    <button class="plib-btn-edit" id="peditbtn-${p.id}" onclick="toggleEditPrompt(${i},${p.id})">编辑</button>
                     <button class="plib-btn-del" onclick="deletePrompt(${i})">×</button>
                 </div>
             </div>
-            <div class="plib-card-preview">${p.content}</div>
+            <div class="plib-card-preview" id="ppreview-${p.id}">${safeContent}</div>
+            <div id="pedit-${p.id}" style="display:none;flex-direction:column;gap:8px;padding:10px 12px;border-top:1px solid var(--border);">
+                <input class="plib-input" id="petitle-${p.id}" value="${safeTitle}">
+                <textarea class="plib-textarea" id="pecontent-${p.id}" rows="5" style="min-height:100px;">${p.content}</textarea>
+                <div style="display:flex;gap:6px;justify-content:flex-end;">
+                    <button onclick="cancelEditPrompt(${p.id})" style="padding:6px 14px;border:1px solid var(--border);border-radius:7px;background:var(--card);color:var(--muted);font-size:12px;cursor:pointer;">取消</button>
+                    <button onclick="confirmEditPrompt(${i},${p.id})" style="padding:6px 14px;border:none;border-radius:7px;background:var(--accent);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">保存</button>
+                </div>
+            </div>
         `;
         list.appendChild(card);
     });
+}
+
+function toggleEditPrompt(i, id) {
+    const editEl = document.getElementById(`pedit-${id}`);
+    const previewEl = document.getElementById(`ppreview-${id}`);
+    const editBtn = document.getElementById(`peditbtn-${id}`);
+    const isOpen = editEl.style.display === 'flex';
+    if (isOpen) {
+        editEl.style.display = 'none';
+        previewEl.style.display = '';
+        editBtn.textContent = '编辑';
+    } else {
+        editEl.style.display = 'flex';
+        previewEl.style.display = 'none';
+        editBtn.textContent = '收起';
+        document.getElementById(`petitle-${id}`).focus();
+    }
+}
+
+function cancelEditPrompt(id) {
+    const editEl = document.getElementById(`pedit-${id}`);
+    const previewEl = document.getElementById(`ppreview-${id}`);
+    const editBtn = document.getElementById(`peditbtn-${id}`);
+    editEl.style.display = 'none';
+    previewEl.style.display = '';
+    editBtn.textContent = '编辑';
+}
+
+function confirmEditPrompt(i, id) {
+    const newTitle = document.getElementById(`petitle-${id}`).value.trim();
+    const newContent = document.getElementById(`pecontent-${id}`).value.trim();
+    if (!newTitle || !newContent) return showToast('名称和内容不能为空');
+    promptLibData[i] = { ...promptLibData[i], title: newTitle, content: newContent };
+    savePromptLib();
+    renderPrompts();
 }
 
 function savePrompt() {
@@ -837,17 +883,6 @@ function copyPrompt(i, id) {
         const btn = document.getElementById(`pbtn-${id}`);
         if (btn) { btn.textContent = '✓ 已复制'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 1500); }
     });
-}
-
-function editPrompt(i) {
-    const p = promptLibData[i];
-    const newTitle = prompt('修改名称：', p.title);
-    if (newTitle === null) return;
-    const newContent = prompt('修改内容：', p.content);
-    if (newContent === null) return;
-    promptLibData[i] = { ...p, title: newTitle.trim() || p.title, content: newContent.trim() || p.content };
-    savePromptLib();
-    renderPrompts();
 }
 
 function deletePrompt(i) {
