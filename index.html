@@ -601,8 +601,8 @@ function copyAllWithNote() {
         return showToast('该选题暂无关键词');
     }
     const kwList = kwLibData[currentTopic].join('，');
-    const noteContent = right.innerText.replace(/\n{3,}/g, '\n\n').trim();
-    const output = `#关键词列表\n${kwList}\n\n#笔记内容\n${noteContent || '（DRAFT 区域暂无内容）'}`;
+    const noteContent = left.innerText.replace(/\n{3,}/g, '\n\n').trim();
+    const output = `#关键词列表\n${kwList}\n\n#笔记内容\n${noteContent || '（ORIGINAL 区域暂无内容）'}`;
     navigator.clipboard.writeText(output).then(() => {
         showToast('✅ 已复制关键词列表 + 笔记内容！');
     });
