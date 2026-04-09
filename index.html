@@ -129,7 +129,39 @@
         .copy-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: #222; color: #fff; padding: 10px 22px; border-radius: 24px; font-size: 14px; opacity: 0; transition: all 0.3s; z-index: 99999; pointer-events: none; }
         .copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* 滚动条 */
+        /* ══ 通用指令库 ══ */
+        #promptLibModal { position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:15000; }
+        .plib-box { background:var(--card);width:720px;max-height:86vh;border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.25); }
+        .plib-header { padding:15px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--bg);flex-shrink:0; }
+        .plib-title { font-size:15px;font-weight:700;color:var(--text); }
+        .plib-close { font-size:22px;cursor:pointer;background:none;border:none;color:var(--muted);line-height:1;padding:2px 6px;border-radius:6px; }
+        .plib-close:hover { background:var(--border); }
+        .plib-list { flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px; }
+        .plib-empty { color:var(--muted);font-size:13px;text-align:center;padding:40px 0; }
+        .plib-card { background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:box-shadow 0.15s; }
+        .plib-card:hover { box-shadow:0 2px 12px rgba(0,0,0,0.08); }
+        .plib-card-top { display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border); }
+        .plib-card-title { font-size:13px;font-weight:700;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+        .plib-card-actions { display:flex;gap:5px;flex-shrink:0; }
+        .plib-btn-copy { padding:4px 12px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:0.15s; }
+        .plib-btn-copy:hover { filter:brightness(0.9); }
+        .plib-btn-copy.copied { background:var(--green); }
+        .plib-btn-edit { padding:4px 10px;background:var(--card);color:var(--muted);border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;transition:0.15s; }
+        .plib-btn-edit:hover { color:var(--text);border-color:var(--text); }
+        .plib-btn-del { padding:4px 8px;background:none;color:var(--muted);border:none;border-radius:6px;font-size:16px;cursor:pointer;line-height:1;transition:0.15s; }
+        .plib-btn-del:hover { color:var(--red); }
+        .plib-card-preview { padding:10px 14px;font-size:12px;color:var(--muted);line-height:1.7;white-space:pre-wrap;max-height:72px;overflow:hidden;position:relative; }
+        .plib-card-preview::after { content:'';position:absolute;bottom:0;left:0;right:0;height:24px;background:linear-gradient(transparent,var(--bg)); }
+        .plib-new { padding:14px;border-top:1px solid var(--border);background:var(--bg);flex-shrink:0;display:flex;gap:10px; }
+        .plib-new-fields { flex:1;display:flex;flex-direction:column;gap:8px;min-width:0; }
+        .plib-input { padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--card);color:var(--text);outline:none;width:100%;box-sizing:border-box;font-family:inherit;transition:border-color 0.15s; }
+        .plib-input:focus { border-color:var(--accent); }
+        .plib-textarea { padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--card);color:var(--text);outline:none;resize:vertical;width:100%;box-sizing:border-box;font-family:inherit;line-height:1.6;min-height:80px;transition:border-color 0.15s; }
+        .plib-textarea:focus { border-color:var(--accent); }
+        .plib-save-btn { padding:0 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;align-self:flex-end;height:36px;transition:0.15s; }
+        .plib-save-btn:hover { filter:brightness(0.9); }
+
+
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
@@ -143,6 +175,7 @@
 <nav class="sidebar-nav">
     <button class="nav-btn" onclick="focusSection('right')" title="回到 DRAFT 编辑区">📝</button>
     <button class="nav-btn" onclick="openKwLib()" title="关键词库">🗂️</button>
+    <button class="nav-btn" onclick="openPromptLib()" title="通用指令库">💬</button>
     <button class="nav-btn" onclick="openTransformModal()" title="进入智能替换中心">🚀</button>
     <div style="flex:1"></div>
     <button class="nav-btn" onclick="openThemeModal()" title="主题设置">🎨</button>
@@ -221,7 +254,7 @@
                     <li>左侧列表选择选题，右侧展示对应关键词</li>
                     <li>顶部搜索框可搜索选题名称快速跳转</li>
                     <li>点击关键词标签可单独复制</li>
-                    <li>「复制全部+笔记」按钮：将所有关键词 + 当前 ORIGINAL 内容，以 <code>#关键词列表 / #笔记内容</code> 格式一键复制到剪切板，直接发给 AI 卡关键词</li>
+                    <li>「复制全部+笔记」按钮：将所有关键词 + 当前 DRAFT 内容，以 <code>#关键词列表 / #笔记内容</code> 格式一键复制到剪切板，直接发给 AI 卡关键词</li>
                     <li>支持从 Excel 批量粘贴关键词（逗号/换行分隔均可）</li>
                     <li>支持重命名、删除选题</li>
                 </ul>
@@ -307,6 +340,24 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- 💬 通用指令库 Modal -->
+<div id="promptLibModal">
+    <div class="plib-box">
+        <div class="plib-header">
+            <span class="plib-title">💬 通用指令库</span>
+            <button class="plib-close" onclick="closePromptLib()">&times;</button>
+        </div>
+        <div class="plib-list" id="promptList"></div>
+        <div class="plib-new">
+            <div class="plib-new-fields">
+                <input class="plib-input" id="promptTitleInput" placeholder="指令名称（如：卡关键词、改标题…）" onkeydown="if(event.key==='Enter')document.getElementById('promptContentInput').focus()">
+                <textarea class="plib-textarea" id="promptContentInput" rows="4" placeholder="在这里粘贴你的 prompt 内容…"></textarea>
+            </div>
+            <button class="plib-save-btn" onclick="savePrompt()">＋ 保存</button>
         </div>
     </div>
 </div>
@@ -716,8 +767,89 @@ function renameCurrentTopic() {
 }
 
 // ══════════════════════════════════════════════════
-//  Toast 提示
+//  💬 通用指令库
 // ══════════════════════════════════════════════════
+let promptLibData = []; // [{id, title, content}]
+
+function loadPromptLib() {
+    try { promptLibData = JSON.parse(localStorage.getItem('dw_promptlib_v1') || '[]'); } catch(e) { promptLibData = []; }
+}
+function savePromptLib() {
+    localStorage.setItem('dw_promptlib_v1', JSON.stringify(promptLibData));
+}
+
+function openPromptLib() {
+    document.getElementById('promptLibModal').style.display = 'flex';
+    renderPrompts();
+}
+function closePromptLib() {
+    document.getElementById('promptLibModal').style.display = 'none';
+}
+
+function renderPrompts() {
+    const list = document.getElementById('promptList');
+    if (promptLibData.length === 0) {
+        list.innerHTML = '<div class="plib-empty">还没有指令，在下方新建一个吧</div>';
+        return;
+    }
+    list.innerHTML = '';
+    promptLibData.forEach((p, i) => {
+        const card = document.createElement('div');
+        card.className = 'plib-card';
+        card.innerHTML = `
+            <div class="plib-card-top">
+                <span class="plib-card-title" title="${p.title}">${p.title}</span>
+                <div class="plib-card-actions">
+                    <button class="plib-btn-copy" id="pbtn-${p.id}" onclick="copyPrompt(${i},${p.id})">复制</button>
+                    <button class="plib-btn-edit" onclick="editPrompt(${i})">编辑</button>
+                    <button class="plib-btn-del" onclick="deletePrompt(${i})">×</button>
+                </div>
+            </div>
+            <div class="plib-card-preview">${p.content}</div>
+        `;
+        list.appendChild(card);
+    });
+}
+
+function savePrompt() {
+    const title = document.getElementById('promptTitleInput').value.trim();
+    const content = document.getElementById('promptContentInput').value.trim();
+    if (!title || !content) return showToast('名称和内容都不能为空');
+    promptLibData.push({ id: Date.now(), title, content });
+    savePromptLib();
+    renderPrompts();
+    document.getElementById('promptTitleInput').value = '';
+    document.getElementById('promptContentInput').value = '';
+    showToast('✅ 指令已保存');
+}
+
+function copyPrompt(i, id) {
+    navigator.clipboard.writeText(promptLibData[i].content).then(() => {
+        showToast(`已复制：${promptLibData[i].title}`);
+        const btn = document.getElementById(`pbtn-${id}`);
+        if (btn) { btn.textContent = '✓ 已复制'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 1500); }
+    });
+}
+
+function editPrompt(i) {
+    const p = promptLibData[i];
+    const newTitle = prompt('修改名称：', p.title);
+    if (newTitle === null) return;
+    const newContent = prompt('修改内容：', p.content);
+    if (newContent === null) return;
+    promptLibData[i] = { ...p, title: newTitle.trim() || p.title, content: newContent.trim() || p.content };
+    savePromptLib();
+    renderPrompts();
+}
+
+function deletePrompt(i) {
+    if (!confirm(`删除指令「${promptLibData[i].title}」？`)) return;
+    promptLibData.splice(i, 1);
+    savePromptLib();
+    renderPrompts();
+}
+
+
 let toastTimer;
 function showToast(msg) {
     const t = document.getElementById('copyToast');
@@ -739,11 +871,13 @@ window.onload = () => {
     document.body.className = savedTheme;
     document.querySelectorAll('.theme-card').forEach(d => d.classList.toggle('active', d.dataset.theme === savedTheme));
     loadKwLib();
+    loadPromptLib();
     renderEmoji(); updateStats();
     setInterval(() => { document.getElementById('sysTime').innerText = new Date().toLocaleString(); }, 1000);
 
     // 关闭 Modal 点击背景
     document.getElementById('kwLibModal').addEventListener('click', e => { if(e.target === document.getElementById('kwLibModal')) closeKwLib(); });
+    document.getElementById('promptLibModal').addEventListener('click', e => { if(e.target === document.getElementById('promptLibModal')) closePromptLib(); });
     document.getElementById('guideModal').addEventListener('click', e => { if(e.target === document.getElementById('guideModal')) closeGuide(); });
 };
 </script>
