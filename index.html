@@ -664,7 +664,10 @@ function copyAllWithNote() {
     if (!currentTopic || !kwLibData[currentTopic] || kwLibData[currentTopic].length === 0) {
         return showToast('该选题暂无关键词');
     }
-    const kwList = kwLibData[currentTopic].map(i => typeof i === 'string' ? i : i.kw).join('，');
+    const kwList = kwLibData[currentTopic].map(i => {
+        if (typeof i === 'string') return i;
+        return i.vol ? `${i.kw}（搜索指数：${i.vol}）` : i.kw;
+    }).join('\n');
     const noteContent = left.innerText.replace(/\n{3,}/g, '\n\n').trim();
     const output = `#关键词列表\n${kwList}\n\n#笔记内容\n${noteContent || '（ORIGINAL 区域暂无内容）'}`;
     navigator.clipboard.writeText(output).then(() => {
