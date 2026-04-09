@@ -295,9 +295,14 @@
                     <div class="kw-empty">从左侧选择选题后，这里会显示对应的关键词。</div>
                 </div>
                 <div class="kwlib-footer" id="kwFooter" style="display:none;">
-                    <textarea class="kwlib-input" id="kwInput" rows="2" placeholder="粘贴关键词（逗号、换行均可），再点「保存」&#10;支持直接从 Excel 粘贴整列"></textarea>
+                    <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
+                        <textarea class="kwlib-input" id="kwInput" rows="3" placeholder="从 Excel 直接粘贴两列（关键词 + 月搜索指数），或只粘关键词列，点保存自动解析"></textarea>
+                        <div style="display:flex;gap:6px;">
+                            <button class="kwlib-btn kwlib-btn-accent" onclick="saveKeywords()">💾 保存</button>
+                            <label class="kwlib-btn kwlib-btn-gray" style="cursor:pointer;">📂 导入CSV<input type="file" accept=".csv" style="display:none" onchange="importCSV(this)"></label>
+                        </div>
+                    </div>
                     <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
-                        <button class="kwlib-btn kwlib-btn-accent" onclick="saveKeywords()">💾 保存关键词</button>
                         <button class="kwlib-btn kwlib-btn-green" onclick="copyAllWithNote()">📤 复制全部+笔记</button>
                     </div>
                 </div>
@@ -490,15 +495,16 @@ kwZone.addEventListener('input', autoSave);
 
 // ══════════════════════════════════════════════════
 //  🗂️ 关键词库系统
+//  数据结构: { topicName: [{kw, vol}, ...] }
 // ══════════════════════════════════════════════════
-let kwLibData = {}; // { topicName: [kw1, kw2, ...] }
+let kwLibData = {};
 let currentTopic = null;
 
 function loadKwLib() {
-    try { kwLibData = JSON.parse(localStorage.getItem('dw_kwlib_v1') || '{}'); } catch(e) { kwLibData = {}; }
+    try { kwLibData = JSON.parse(localStorage.getItem('dw_kwlib_v2') || '{}'); } catch(e) { kwLibData = {}; }
 }
 function saveKwLib() {
-    localStorage.setItem('dw_kwlib_v1', JSON.stringify(kwLibData));
+    localStorage.setItem('dw_kwlib_v2', JSON.stringify(kwLibData));
 }
 
 function openKwLib() {
@@ -523,12 +529,12 @@ function renderTopics(filter = '') {
     filtered.forEach(topic => {
         const item = document.createElement('div');
         item.className = 'topic-item' + (topic === currentTopic ? ' active' : '');
-        // 高亮匹配文字
         let displayName = topic;
         if (filter) {
             displayName = topic.replace(new RegExp(filter.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'g'), m => `<span class="topic-highlight">${m}</span>`);
         }
-        item.innerHTML = `<span class="topic-name" title="${topic}">${displayName}</span><span class="topic-del" onclick="deleteTopic(event,'${topic.replace(/'/g,"\\'")}')">×</span>`;
+        const kwCount = (kwLibData[topic] || []).length;
+        item.innerHTML = `<span class="topic-name" title="${topic}">${displayName}</span><span style="font-size:10px;color:var(--muted);flex-shrink:0;">${kwCount}</span><span class="topic-del" onclick="deleteTopic(event,'${topic.replace(/'/g,"\\'")}')">×</span>`;
         item.querySelector('.topic-name').onclick = () => selectTopic(topic);
         list.appendChild(item);
     });
@@ -537,7 +543,6 @@ function renderTopics(filter = '') {
 function filterTopics() {
     const q = document.getElementById('kwLibSearch').value.trim();
     renderTopics(q);
-    // 如果只剩一个结果，自动跳转
     const filtered = Object.keys(kwLibData).filter(t => t.includes(q));
     if (filtered.length === 1) selectTopic(filtered[0]);
 }
@@ -555,13 +560,17 @@ function renderKeywords() {
     const area = document.getElementById('kwTagArea');
     if (!currentTopic || !kwLibData[currentTopic]) { area.innerHTML = '<div class="kw-empty">从左侧选择选题后，这里会显示对应的关键词。</div>'; return; }
     const kws = kwLibData[currentTopic];
-    if (kws.length === 0) { area.innerHTML = '<div class="kw-empty">该选题还没有关键词，在下方输入并保存。</div>'; return; }
-    area.innerHTML = kws.map((kw, i) =>
-        `<span class="kw-tag" onclick="copySingleKw(this,'${kw.replace(/'/g,"\\'")}',${i})">${kw} <span style="font-size:10px;opacity:0.5;">×</span></span>`
-    ).join('');
-    // 长按删除
-    area.querySelectorAll('.kw-tag').forEach((tag, i) => {
-        tag.addEventListener('contextmenu', e => { e.preventDefault(); deleteKw(i); });
+    if (kws.length === 0) { area.innerHTML = '<div class="kw-empty">该选题还没有关键词，在下方粘贴或导入。</div>'; return; }
+    area.innerHTML = kws.map((item, i) => {
+        const kw = typeof item === 'string' ? item : item.kw;
+        const vol = typeof item === 'object' && item.vol ? item.vol : '';
+        const volHtml = vol ? `<span style="font-size:10px;opacity:0.5;margin-left:3px;">${vol}</span>` : '';
+        const safeKw = kw.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        return `<span class="kw-tag" data-idx="${i}" data-kw="${safeKw}">${kw}${volHtml}</span>`;
+    }).join('');
+    area.querySelectorAll('.kw-tag').forEach(tag => {
+        tag.addEventListener('click', () => copySingleKw(tag, tag.dataset.kw, parseInt(tag.dataset.idx)));
+        tag.addEventListener('contextmenu', e => { e.preventDefault(); deleteKw(parseInt(tag.dataset.idx)); });
     });
 }
 
@@ -575,32 +584,87 @@ function copySingleKw(el, kw, idx) {
 
 function deleteKw(idx) {
     if (!currentTopic) return;
-    if (!confirm(`删除关键词「${kwLibData[currentTopic][idx]}」？`)) return;
+    const item = kwLibData[currentTopic][idx];
+    const label = typeof item === 'string' ? item : item.kw;
+    if (!confirm(`删除关键词「${label}」？`)) return;
     kwLibData[currentTopic].splice(idx, 1);
     saveKwLib();
     renderKeywords();
+    renderTopics(document.getElementById('kwLibSearch').value.trim());
+}
+
+// 解析粘贴内容：支持纯关键词列 / 两列Tab分隔（Excel格式）
+function parseKwText(raw) {
+    const lines = raw.split(/\n/).map(l => l.trim()).filter(l => l);
+    const result = [];
+    for (const line of lines) {
+        // Tab 分隔两列
+        const parts = line.split(/\t/);
+        if (parts.length >= 2) {
+            const kw = parts[0].trim();
+            const volRaw = parts[1].replace(/,/g, '').trim(); // 去掉千位分隔符
+            const vol = isNaN(volRaw) || volRaw === '' ? volRaw : Number(volRaw).toLocaleString();
+            if (kw && kw !== '关键词') result.push({ kw, vol }); // 跳过表头
+        } else {
+            // 单列，逗号/中文逗号分隔也支持
+            line.split(/[,，]+/).map(k => k.trim()).filter(k => k).forEach(k => result.push({ kw: k, vol: '' }));
+        }
+    }
+    return result;
 }
 
 function saveKeywords() {
     if (!currentTopic) return showToast('请先选择一个选题');
     const raw = document.getElementById('kwInput').value.trim();
     if (!raw) return;
-    // 分割：支持逗号、中文逗号、换行、制表符（Excel粘贴）
-    const newKws = raw.split(/[,，\n\t]+/).map(k => k.trim()).filter(k => k);
+    const parsed = parseKwText(raw);
     if (!kwLibData[currentTopic]) kwLibData[currentTopic] = [];
-    // 去重
-    newKws.forEach(kw => { if (!kwLibData[currentTopic].includes(kw)) kwLibData[currentTopic].push(kw); });
+    const existing = kwLibData[currentTopic].map(i => typeof i === 'string' ? i : i.kw);
+    let added = 0;
+    parsed.forEach(item => {
+        if (!existing.includes(item.kw)) { kwLibData[currentTopic].push(item); added++; }
+    });
     saveKwLib();
     renderKeywords();
+    renderTopics(document.getElementById('kwLibSearch').value.trim());
     document.getElementById('kwInput').value = '';
-    showToast(`已保存 ${newKws.length} 个关键词`);
+    showToast(`已保存 ${added} 个关键词（跳过 ${parsed.length - added} 个重复）`);
+}
+
+// CSV 导入：第一列关键词，第二列搜索指数
+function importCSV(input) {
+    if (!currentTopic) return showToast('请先选择一个选题');
+    const file = input.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const text = e.target.result;
+        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+        if (!kwLibData[currentTopic]) kwLibData[currentTopic] = [];
+        const existing = kwLibData[currentTopic].map(i => typeof i === 'string' ? i : i.kw);
+        let added = 0;
+        lines.forEach((line, idx) => {
+            // 简单 CSV 解析（处理引号包裹）
+            const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+            const kw = cols[0];
+            if (!kw || kw === '关键词' || kw === 'keyword') return; // 跳过表头
+            const volRaw = cols[1] ? cols[1].replace(/,/g, '').trim() : '';
+            const vol = volRaw && !isNaN(volRaw) ? Number(volRaw).toLocaleString() : volRaw;
+            if (!existing.includes(kw)) { kwLibData[currentTopic].push({ kw, vol }); existing.push(kw); added++; }
+        });
+        saveKwLib();
+        renderKeywords();
+        renderTopics(document.getElementById('kwLibSearch').value.trim());
+        showToast(`CSV 导入完成，新增 ${added} 个关键词`);
+        input.value = '';
+    };
+    reader.readAsText(file, 'UTF-8');
 }
 
 function copyAllWithNote() {
     if (!currentTopic || !kwLibData[currentTopic] || kwLibData[currentTopic].length === 0) {
         return showToast('该选题暂无关键词');
     }
-    const kwList = kwLibData[currentTopic].join('，');
+    const kwList = kwLibData[currentTopic].map(i => typeof i === 'string' ? i : i.kw).join('，');
     const noteContent = left.innerText.replace(/\n{3,}/g, '\n\n').trim();
     const output = `#关键词列表\n${kwList}\n\n#笔记内容\n${noteContent || '（ORIGINAL 区域暂无内容）'}`;
     navigator.clipboard.writeText(output).then(() => {
