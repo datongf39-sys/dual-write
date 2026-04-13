@@ -136,10 +136,10 @@
         .plib-title { font-size:15px;font-weight:700;color:var(--text); }
         .plib-close { font-size:20px;cursor:pointer;background:none;border:none;color:var(--muted);line-height:1;padding:4px 8px;border-radius:6px;transition:0.15s; }
         .plib-close:hover { background:var(--border);color:var(--text); }
-        .plib-body { flex:1;display:flex;overflow:hidden; }
+        .plib-body { flex:1;display:flex;overflow:hidden;min-height:0; }
 
         /* 左侧新建区 */
-        .plib-new { width:280px;flex-shrink:0;border-right:1px solid var(--border);background:var(--bg);display:flex;flex-direction:column;padding:16px;gap:10px; }
+        .plib-new { width:280px;flex-shrink:0;border-right:1px solid var(--border);background:var(--bg);display:flex;flex-direction:column;padding:16px;gap:10px;overflow:hidden;min-height:0; }
         .plib-new-label { font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;margin-bottom:2px; }
         .plib-input { padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--card);color:var(--text);outline:none;width:100%;box-sizing:border-box;font-family:inherit;transition:border-color 0.15s; }
         .plib-input:focus { border-color:var(--accent); }
@@ -413,6 +413,7 @@ function executeSafeTransform() {
     rules.sort((a, b) => b.b.length - a.b.length);
     const temp = document.createElement('div'); temp.innerHTML = input.innerHTML;
     const walk = (node) => {
+        if (node.nodeType !== 1 && node.nodeType !== 3) return;
         if (isUnderRedProtection(node)) return;
         if (node.nodeType === 3) {
             let txt = node.nodeValue; let hasChanged = false;
@@ -862,7 +863,19 @@ function confirmEditPrompt(i, id) {
     if (!newTitle || !newContent) return showToast('名称和内容不能为空');
     promptLibData[i] = { ...promptLibData[i], title: newTitle, content: newContent };
     savePromptLib();
-    renderPrompts();
+    // 原地更新卡片，不重建列表
+    const safeTitle = newTitle.replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    const safeContent = newContent.replace(/</g,'&lt;');
+    const titleEl = document.querySelector(`#pcard-${id} .plib-card-title`);
+    const previewEl = document.getElementById(`ppreview-${id}`);
+    const editEl = document.getElementById(`pedit-${id}`);
+    const editBtn = document.getElementById(`peditbtn-${id}`);
+    if (titleEl) { titleEl.textContent = newTitle; titleEl.title = newTitle; }
+    if (previewEl) previewEl.innerHTML = safeContent;
+    editEl.style.display = 'none';
+    previewEl.style.display = '';
+    editBtn.textContent = '编辑';
+    showToast('已保存');
 }
 
 function savePrompt() {
