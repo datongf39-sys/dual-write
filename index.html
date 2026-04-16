@@ -550,6 +550,110 @@ function updateKwTags() {
     }
 }
 
+// 自动标红关键词
+function autoHighlightKeywords() {
+    const keywords = parseKeywordsFromKwZone();
+    const allKeywords = [...keywords.core, ...keywords.longtail];
+
+    if (allKeywords.length === 0) return;
+
+    // 保存当前光标位置
+    const selection = window.getSelection();
+    let cursorNode = null;
+    let cursorOffset = 0;
+    if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        cursorNode = range.startContainer;
+        cursorOffset = range.startOffset;
+    }
+
+    // 遍历所有文本节点
+    const walker = document.createTreeWalker(
+        right,
+        NodeFilter.SHOW_TEXT,
+        null
+    );
+
+    const nodesToProcess = [];
+    let node;
+    while (node = walker.nextNode()) {
+        // 跳过已经标红的节点
+        if (node.parentElement && node.parentElement.style.color === 'rgb(216, 57, 49)') {
+            continue;
+        }
+        nodesToProcess.push(node);
+    }
+
+    nodesToProcess.forEach(textNode => {
+        let text = textNode.textContent;
+        let hasMatch = false;
+        let fragments = [];
+        let lastIndex = 0;
+
+        // 按关键词长度排序，优先匹配长关键词
+        const sortedKeywords = allKeywords.sort((a, b) => b.length - a.length);
+
+        // 找出所有匹配位置
+        const matches = [];
+        sortedKeywords.forEach(kw => {
+            let index = 0;
+            while ((index = text.indexOf(kw, index)) !== -1) {
+                // 检查是否与已有匹配重叠
+                const overlaps = matches.some(m =>
+                    (index >= m.start && index < m.end) ||
+                    (index + kw.length > m.start && index + kw.length <= m.end)
+                );
+                if (!overlaps) {
+                    matches.push({ start: index, end: index + kw.length, keyword: kw });
+                    hasMatch = true;
+                }
+                index += kw.length;
+            }
+        });
+
+        if (!hasMatch) return;
+
+        // 按位置排序
+        matches.sort((a, b) => a.start - b.start);
+
+        // 构建新的 HTML
+        matches.forEach(match => {
+            if (match.start > lastIndex) {
+                fragments.push(document.createTextNode(text.substring(lastIndex, match.start)));
+            }
+            const span = document.createElement('span');
+            span.style.color = 'rgb(216, 57, 49)';
+            span.style.fontWeight = 'bold';
+            span.textContent = match.keyword;
+            fragments.push(span);
+            lastIndex = match.end;
+        });
+
+        if (lastIndex < text.length) {
+            fragments.push(document.createTextNode(text.substring(lastIndex)));
+        }
+
+        // 替换原节点
+        const parent = textNode.parentNode;
+        fragments.forEach(frag => parent.insertBefore(frag, textNode));
+        parent.removeChild(textNode);
+
+        // 恢复光标位置
+        if (cursorNode === textNode) {
+            try {
+                const range = document.createRange();
+                const newNode = fragments[0];
+                range.setStart(newNode, Math.min(cursorOffset, newNode.textContent.length));
+                range.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            } catch (e) {
+                // 光标恢复失败，忽略
+            }
+        }
+    });
+}
+
 function copyKwTag(el) {
     const text = el.innerText;
     navigator.clipboard.writeText(text).then(() => {
@@ -689,8 +793,32 @@ function importDict(input) {
 }
 
 left.addEventListener('input', () => { updateStats(); autoSave(); });
-right.addEventListener('input', () => { updateStats(); autoSave(); });
-kwZone.addEventListener('input', () => { autoSave(); updateKwTags(); });
+
+// 自动标红防抖
+let autoHighlightTimer = null;
+right.addEventListener('input', () => {
+    updateStats();
+    autoSave();
+
+    // 防抖：500ms 后执行自动标红
+    clearTimeout(autoHighlightTimer);
+    autoHighlightTimer = setTimeout(() => {
+        autoHighlightKeywords();
+        updateKwTags(); // 标红后更新 tag 显示
+    }, 500);
+});
+
+kwZone.addEventListener('input', () => {
+    autoSave();
+    updateKwTags();
+
+    // 关键词变化时，重新标红正文
+    clearTimeout(autoHighlightTimer);
+    autoHighlightTimer = setTimeout(() => {
+        autoHighlightKeywords();
+        updateKwTags();
+    }, 500);
+});
 
 // ══════════════════════════════════════════════════
 //  🗂️ 关键词库系统
