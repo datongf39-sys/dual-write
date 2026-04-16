@@ -517,11 +517,11 @@ function updateKwTags() {
 
     zone.style.display = 'block';
 
-    // 提取正文中所有红字内容
+    // 提取正文中所有红字内容（正文里是纯红字，没有 #）
     const redTexts = new Set();
     const redElements = right.querySelectorAll('span[style*="color: rgb(216, 57, 49)"], span[style*="color:rgb(216,57,49)"]');
     redElements.forEach(el => {
-        const text = el.innerText.trim().replace(/^#/, ''); // 去掉开头的#
+        const text = el.innerText.trim();
         if (text) redTexts.add(text);
     });
 
@@ -593,11 +593,29 @@ function smartCopy() {
     const temp = document.createElement('div');
     temp.appendChild(right.cloneNode(true));
 
-    // 如果 tag 区可见，添加到复制内容中
+    // 如果 tag 区可见，将 tag 转换为红色加粗的 #关键词 格式
     if (zone.style.display !== 'none') {
-        const tagClone = document.getElementById('kwTagsContainer').cloneNode(true);
-        temp.appendChild(document.createElement('br'));
-        temp.appendChild(tagClone);
+        const container = document.getElementById('kwTagsContainer');
+        const tags = container.querySelectorAll('.kw-tag');
+
+        if (tags.length > 0) {
+            temp.appendChild(document.createElement('br'));
+
+            // 将每个 tag 转换为红色加粗的 #关键词 格式
+            tags.forEach((tag, index) => {
+                const span = document.createElement('span');
+                span.style.color = 'rgb(216, 57, 49)';
+                span.style.fontWeight = 'bold';
+                // tag.innerText 已经包含 #，直接使用
+                span.innerText = tag.innerText;
+                temp.appendChild(span);
+
+                // 标签之间添加空格
+                if (index < tags.length - 1) {
+                    temp.appendChild(document.createTextNode(' '));
+                }
+            });
+        }
     }
 
     // 临时插入到 DOM 中以便复制
